@@ -1,5 +1,5 @@
-Consumet: Open-source *con*structor of *su*rrogates and *met*amodels
-====================================================================
+Consumet: *con*structor of *su*rrogates and *met*amodels
+========================================================
 This is a tool for creating surrogate models from a user-provided
 black box, via penalized regression methods and adaptive sampling.
 Please see the [user manual](doc/manual.pdf) for more information;
