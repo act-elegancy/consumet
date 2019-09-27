@@ -1,0 +1,378 @@
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% Preamble
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+\documentclass[a4paper,bibliography=numbered]{scrartcl}
+\PassOptionsToPackage{fleqn,intlimits}{amsmath}
+
+\usepackage[utf8]{inputenc}
+\usepackage[T1]{fontenc}
+\usepackage{microtype}
+\usepackage{libertinus}
+\usepackage{libertinust1math}
+\usepackage[scale=0.85]{sourcecodepro}
+\usepackage{scrextend}
+\usepackage{underscore}
+\usepackage[english,iso]{isodate}
+\usepackage[english]{babel}
+\usepackage[svgnames]{xcolor}
+\usepackage{booktabs}
+\usepackage{hyperref}
+\usepackage{cleveref}
+\usepackage{listings}
+\usepackage{amsmath}
+\usepackage{bm}
+
+\isodash{--}
+\urlstyle{rm}
+\hypersetup{linktoc=page}
+\hypersetup{colorlinks}
+\hypersetup{allcolors=Navy}
+\lstset{basicstyle=\ttfamily\color{DarkRed},upquote=true}
+\setkomafont{labelinglabel}{\quad\ttfamily\textcolor{DarkRed}}
+\newcommand{\lstfile}[2]{\lstinputlisting[xleftmargin=0.4cm,basicstyle=\footnotesize\ttfamily\color{DarkRed},#2]{#1}}
+
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% Main document
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+\begin{document}
+\title{Consumet user manual}
+\author{\href{mailto:jabir.ouassou@sintef.no}{J.A. Ouassou},
+        \href{mailto:julian.straus@sintef.no}{J. Straus},
+        \href{mailto:brage.knudsen@sintef.no}{B.R. Knudsen}, 
+	 \& \href{mailto:rahul.anantharaman@sintef.no}{R. Anantharaman}}
+\maketitle
+\begin{abstract}
+	\noindent
+	Herein, we show how to install and use \textbf{Consumet}, an open-source \textbf{con}structor of \textbf{su}rrogates and \textbf{met}amodels.
+	Consumet is written in Python~3, and constructs these models via a combination of penalized regression, adaptive sampling, and information criteria.
+	For details, we refer to our technical paper on the subject~\cite{TechPaper}.
+\end{abstract}
+\tableofcontents
+
+
+
+\newpage
+\section{License}
+Consumet is available as free and open-source software under the MIT license:
+\lstfile{../LICENSE.md}{firstline=4}
+This is a permissive license that essentially permits you to use the software for any purpose, as long as you just give credit where appropriate.
+However, outside of any legal obligations, the authors at SINTEF Energy Research kindly request that any useful modifications you make to the code be contributed back to us, so that we can improve the tool over time.
+If you find the tool useful for research, you may also consider citing our description of the tool in Ref.~\cite{TechPaper}.
+
+
+
+\section{Installation}
+Consumet has the following system dependencies:
+\begin{labeling}{xxxxxxxxx}
+	\item[python3]
+		used to implement all of our code;
+	\item[nomad]
+		used for optimization of non-differentiable problems;
+	\item[ipopt]
+		used for optimization of differentiable problems.
+\end{labeling}
+In addition, we rely on the following Python libraries:
+\begin{labeling}{xxxxxxxxx}
+	\item[numpy]
+		standard library for numerical programming;
+	\item[scipy] 
+		standard library for scientific computing;
+	\item[pyomo] 
+		optimization framework used for regression;
+	\item[pycddlib] 
+		used for performing vertex calculations;
+	\item[pydoe] 
+		used for constructing experimental designs.
+\end{labeling}
+The easiest way to obtain such a setup is by downloading and installing the Python3 version of \href{https://www.anaconda.com/distribution/}{Anaconda} for your operating system.
+Almost almost all the dependencies listed above are then available via the \texttt{conda} package manager.
+Simply open \emph{Anaconda Prompt} from your start menu if you use Windows, or open a normal system terminal if you use Linux or Mac.
+Then enter the following command in the terminal window in order to install the dependencies via \texttt{conda}:
+\begin{lstlisting}
+  conda install -c conda-forge numpy scipy pydoe pyomo pyomo.extras ipopt
+\end{lstlisting}
+One exception is however \texttt{pycddlib}, which is not currently available via \texttt{conda}.
+This library can however be installed via the \texttt{pip} package manager, which should also have been installed as part of Anaconda.
+To do this, enter the following command into the terminal window:
+\begin{lstlisting}
+  pip install pycddlib
+\end{lstlisting}
+The other exception is \texttt{nomad}.
+If you use Windows or Mac, you can download and install prebuilt \texttt{nomad} packages from \href{https://sourceforge.net/projects/nomad-bb-opt/files/}{SourceForge}.
+If you use Linux, you will have to download the source code from either \href{https://sourceforge.net/projects/nomad-bb-opt/files/}{SourceForge} or the official \href{https://www.gerad.ca/nomad/}{website}, and then manually compile the code in the usual manner (i.e.\ by running the commands \texttt{./configure} and \texttt{make} from a terminal).
+For more documentation on how to install \texttt{nomad}, we refer to chapter~2 of the \href{https://sourceforge.net/projects/nomad-bb-opt/files/user_guide.pdf/download}{NOMAD User Guide}.
+
+On all platforms, you need to manually add the location of the \texttt{nomad} executable to your system path.
+If you use Windows~10, this can be done by going to \emph{Edit the system environment variables} in the control panel, selecting \emph{Path} under \emph{System variables}, and clicking \emph{Edit}.
+If you installed \texttt{nomad} v.~3.9.0 to the default location, you can add \verb|C:\Program Files (x86)|\verb|\nomad.3.9.0\bin| as a new entry, and save the settings.
+If you use Linux with the \texttt{bash} shell, and copied the \texttt{nomad} folder to \texttt{/opt}\texttt{/nomad} after compilation, you can add \texttt{export} \texttt{PATH=\$PATH:/opt}\texttt{/nomad/bin} to the end of your \texttt{\textasciitilde/.bashrc}.
+On all platforms, you can verify that the path has been updated correctly by opening a new terminal window, entering the command \texttt{nomad}, and checking that you don't get system errors.
+For more information, we again refer to the \href{https://sourceforge.net/projects/nomad-bb-opt/files/user_guide.pdf/download}{NOMAD User Guide}.
+
+Once all the dependencies above have been installed, no special procedures are required to install Consumet.
+Simply extract all the files of the project to an arbitrary folder on your computer, open a terminal, and continue following the instructions in the next section.
+
+
+
+\section{Basic usage}\label{sec:basic}
+In order to use Consumet for your project, you have to provide two files: 
+\begin{labeling}{xxxxxxxxxxxxxxx}
+	\item[config.ini]
+		This contains the configuration options used for surrogate construction, such as e.g.\ the desired model class, model order, and variable bounds.
+		The available configuration options are listed and described in \cref{sec:param}.
+	\item[true\_model.py]
+		This should define a function \texttt{simulate}, which takes a 1-dimensional list or array as input, and returns a 1-dimensional list or array as output.
+		This defines the $\mathbb{R}^d \rightarrow \mathbb{R}^r$ process that we create a surrogate model for.
+\end{labeling}
+These can be placed anywhere you want, and the output files generated by the surrogate modeling tool will then end up in the same folder.
+Note that you have to change folders to the location of these files \emph{before} executing Consumet in order for the program to find them.
+
+\newpage
+For instance, if we wish to model the \href{https://en.wikipedia.org/wiki/Rosenbrock_function}{Rosenbrock function}, we can define \texttt{true\_model.py}:
+\begin{lstlisting}
+  def simulate(x): 
+      z = [ (1-x[0])**2 + 100*(x[1]-x[0]**2)**2 ]
+      return z
+\end{lstlisting}
+Let us now say that we wish to use a 4th-order 2-dimensional Taylor series as our surrogate model, with box constraints $-2 < x_0 < 2$ and $-1 < x_1 < 3$.
+We can then define \texttt{config.ini} as:
+\begin{lstlisting}
+  model_class = taylor
+  model_order = 4
+  input_dim   = 2
+  input_lb    = [-2., -1.]
+  input_ub    = [ 2.,  3.]
+\end{lstlisting}
+After that, we simply need to run Consumet from the folder where these files are.
+For example, say that you extracted the surrogate modeling tool to a folder named \texttt{Consumet} on your desktop, and placed \texttt{config.ini} and \texttt{true\_model.py} in a folder \texttt{Simulation} on your desktop.
+You can then generate the surrogates by opening a terminal and running the following commands:\footnote{On some Linux distributions, \texttt{python} refers to \texttt{python2}, in which case you have to write \texttt{python3} instead.}
+\begin{lstlisting}
+  cd Desktop/Simulation
+  python ../Consumet/bin/consumet.py
+\end{lstlisting}
+More examples of how to setup \texttt{config.ini} and \texttt{true\_model.py} are available in the \texttt{examples} subfolder of the project documentation.
+This includes both pure Python examples and examples of how to couple Consumet to MS~Excel.
+Since many commercial software packages provide interfaces to Excel, including e.g.\ Aspen Plus and Aspen HYSYS, the MS~Excel examples may also be of interest for users wishing to generate surrogates for models implemented in those.
+
+When the surrogate model construction is complete, the sampled data will be saved in \texttt{Simulation/samples.csv} and the model coefficients in \texttt{Simulation/regression.csv}.
+The formats of these output files are straight-forward.
+When modeling an $\mathbb{R}^d \rightarrow \mathbb{R}^r$ process, \texttt{samples.csv} will contain 1~column with a sample number, $d$~columns describing the process input~$\bm{x}\in\mathbb{R}^d$, and $r$~columns describing the process output~$\bm{z}\in\mathbb{R}^r$.
+So if e.g.\ the 0th sample was at $\bm{x} = (0.25,0.75)$ and produced the result $\bm{z} = (0.3,60)$, \texttt{samples.csv} would contain the line:
+\begin{lstlisting}
+  0,2.500000e-01,7.500000e-01,3.000000e-01,6.000000e+01
+\end{lstlisting}
+
+Before discussing the format of \texttt{regression.csv}, it is useful to briefly reiterate from Ref.~\cite{TechPaper} how we formulate our surrogate models.
+Firstly, we should mention that the surrogate models are formulated in terms of \emph{standardized variables} $\xi_i \coloneq (x_i - x_i^\text{min})/(x_i^\text{max} - x_i^\text{min})$, where $x_i^\text{min}$ and $x_i^\text{max}$ refer to the input bounds specified in your \texttt{config.ini}.
+For instance, the configuration file for the Rosenbrock example above implies that $\xi_0 = (x_0+2)/(2+2)$ and $\xi_1 = (x_1+1)/(3+1)$.
+This procedure basically maps all input vectors $\bm{x}$ within bounds to the new variables $\bm{\xi} \in [0,1]^d$.
+In terms of these standardized variables, the final equation that describes the surrogate model output~$\bm{z} = (z_0,\ldots,z_{r-1})$ as function of the standardized process input~$\bm{\xi} = (\xi_0,\ldots,\xi_{d-1})$ is:
+\begin{equation}
+	z_m = \sum_{n_0} \cdots \sum_{n_{d-1}} \theta_{m,n_0,\ldots,n_{d-1}}  b_{n_0}\kern-0.05em(\xi_0) \,\cdots b_{n_{d-1}}\kern-0.05em(\xi_{d-1})
+\end{equation}
+Here, $b_n(\xi)$ are the one-dimensional basis functions chosen to construct surrogate models, $\theta_{m,n_0,\ldots,n_{d-1}}$ are the corresponding regression coefficients that will be written to \texttt{regression.csv}, and the sums should be taken over all the $n_i$'s that are written to file.\footnote{The values for $n_i$ included in the models are constrained by the chosen model order, as described in Ref.~\cite{TechPaper}.}
+To make this a bit less abstract, let us focus on the special case of a process that has 2D input and 2D output:
+\begin{align}
+	z_0 &= \sum_{n_0} \sum_{n_1} \theta_{0,n_0,n_1} b_{n_0}\kern-0.05em(\xi_0) b_{n_1}\kern-0.05em(\xi_1) &
+	z_1 &= \sum_{n_0} \sum_{n_1} \theta_{1,n_0,n_1} b_{n_0}\kern-0.05em(\xi_0) b_{n_1}\kern-0.05em(\xi_1)
+\end{align}
+To make the structure of the results even clearer, we can further limit our scope to Taylor series as basis functions [$b_0(\xi) = 1, b_1(\xi) = \xi, b_2(\xi) = \xi^2$], and set the model order to~2, which yields:
+\begin{equation}
+	\begin{aligned}
+		z_0 &= \theta_{0,0,0} + \theta_{0,1,0} \xi_0 + \theta_{0,0,1} \xi_1 + \theta_{0,2,0} \xi_0^2 + \theta_{0,0,2} \xi_1^2 + \theta_{0,1,1} \xi_0\xi_1 \\
+		z_1 &= \theta_{1,0,0} + \theta_{1,1,0} \xi_0 + \theta_{1,0,1} \xi_1 + \theta_{1,2,0} \xi_0^2 + \theta_{1,0,2} \xi_1^2 + \theta_{1,1,1} \xi_0\xi_1
+	\end{aligned}
+\end{equation}
+This illustrates the logic behind the coefficient indices well: $\theta_{1,2,0}$ describes a term in the surrogate model for~$z_1$ that is 2nd-order in $\xi_0$ and 0th-order in $\xi_1$, which obviously is the $\xi_0^2$ term in this case.
+Since the models are fit using penalized regression, many of these coefficients can be zero, especially if one uses constrained sampling.
+Now that we have described the structure of our surrogate models, the format of the output file \texttt{regression.csv} is trivial: each line simply contains the subscripts of $\theta_{m,n_0,\ldots,n_{d-1}}$ followed by the coefficient value itself.
+So if the value for the coefficient $\theta_{1,2,0} = 0.25$, the output file \texttt{regression.csv} would contain a line like this:
+\begin{lstlisting}
+  1,2,0,2.500000e-01
+\end{lstlisting}
+
+If we as basis functions instead of Taylor series used Legendre polynomials~$P_n$, Chebyshev polynomials~$T_n$, or Fourier series, the coefficient $\theta_{1,2,0}$ would similarly describe contributions from terms $P_2(2\xi_0-1) = [3(2\xi^2_0-1)-1]/2$, $T_2(2\xi_0-1) = 2(2\xi_0-1)^2-1$, and $\sin(2\pi \xi_0)$, respectively.\footnote{$T_n$ and $P_n$ are evaluated at $2\xi_i-1$ since they form an orthonormal basis on $[-1,+1]$ but we standardized $\xi_i$ to $[0,1]$.}
+The currently available basis functions are implemented as shown in \cref{tab:modelclass}.
+For more details we again refer to Ref.~\cite{TechPaper}, as well as the \href{https://docs.scipy.org/doc/scipy/reference/special.html}{SciPy documentaion} for the orthogonal polynomials.
+New basis functions can also easily be appended to the end of the file \texttt{lib/surrogate.py}.
+\begin{table}[h!]
+	\begin{center}
+	\caption{List of available model classes in Consumet.}
+	\label{tab:modelclass}
+	\begin{tabular}{ll}
+		\toprule
+		Model class     &	Basis function $b_n(\xi)$ \\
+		\midrule
+		Taylor			&	\texttt{xi**n} \\
+		Legendre		&	\texttt{scipy.special.eval\_legendre(n, 2*xi-1)} \\
+		Chebyshev		&	\texttt{scipy.special.eval\_chebyt(n, 2*xi-1)} \\
+		Fourier			&	\texttt{numpy.sin(n*pi*xi) if n > 0 else 1} \\
+		\bottomrule
+	\end{tabular}
+	\end{center}
+	\vspace{-3ex}
+\end{table}
+
+
+
+
+
+\newpage
+\section{Advanced usage}
+\subsection{Pickled surrogates}
+To use the constructed surrogates in \emph{other} languages than Python, you have to implement the basis functions discussed in \cref{sec:basic}, manually standardize your input variables~$\bm{x}$ to obtain~$\bm{\xi}$, and finally load the surrogate regression coefficients from \texttt{regression.csv}.
+However, if your code is written in Python, there is another simpler alternative: you can import the constructed surrogate models from binary files.
+In order to do this, you first have to add the location of the Consumet libraries to your Python path, and import the library \texttt{surrogate} from that folder.
+If you installed Consumet to e.g.\ the folder \verb|/opt/consumet|, this can be done as follows:
+\begin{lstlisting}
+  import sys
+  sys.path.append('/opt/consumet/lib')
+
+  import surrogate
+\end{lstlisting}
+You can then use the \texttt{pickle} library to open the Consumet output file named \texttt{surrogate.pkl}:
+\begin{lstlisting}
+  import pickle
+
+  with open('surrogate.pkl', 'rb') as f:
+    surrogate = pickle.load(f)
+\end{lstlisting}
+The result should be an array of \texttt{Surrogate} objects, where each component acts as a normal function.
+For instance, if you have an input~$\bm{\xi} = (0.25,0.75)$, \texttt{surrogate[0]([0.25,0.75])} would return the value of~$z_0$ at that point, while \texttt{surrogate[1]([0.25,0.75])} returns~$z_1$.
+Note that $\bm{\xi}$ here refers to the \emph{standardized} input variable, as discussed in \cref{sec:basic}.
+
+If you use this feature, we still recommend saving the \texttt{regression.csv} and \texttt{samples.csv} files.
+Pickle files are not always stable across Python version updates, and do not always work when copied between computers or operating systems, in which case it is useful to be able to load \texttt{regression.csv} instead of redoing the entire surrogate fitting.
+The file \texttt{samples.csv} can be used as an input to the batch sampling routine of the surrogate modeling tool, and can therefore be used to recreate surrogate models without performing any new sampling.
+
+Once you have imported the \texttt{Surrogate} objects discussed above, it is also quite easy to transform between raw input variables~$\bm{x}$ and standardized variables~$\bm{\xi}$.
+Standardization of $\bm{x}$ can be achieved using the function \texttt{Surrogate.standard}.
+Conversely, the unscaled variables~$\bm{x}$ can be restored from $\bm{\xi}$ using the function \texttt{Surrogate.restore}.
+Both function takes a list or \texttt{numpy} array as their inputs ($\bm{x}$ or $\bm{\xi}$), and return a list or \texttt{numpy} array as their outputs.
+It does not matter which of the \texttt{Surrogate} objects in the \texttt{surrogate} list above is used for standardization or restoration, as all surrogate models have the same input bounds.
+Thus, for e.g.\ the Rosenbrock example discussed in \cref{sec:basic}, the fact that $\bm{\xi} = (0.25,0.75)$ corresponds to $\bm{x} = (-1,2)$ could have been determined by running e.g. \texttt{xi = surrogate[0].standard([-1,2])}.
+
+
+
+\subsection{Constrained sampling}\label{sec:constraint}
+Consumet allows constrained sampling via the option \texttt{input\_file}, that is, it restricts the sampling domain to a subspace of the overall sampling domain.
+Constrained sampling is achieved by providing a \texttt{csv}-file in which input data to the model is provided.
+The input data is sampled from the previous unit operations either through a surrogate model or the detailed model.
+Manipulated variables in the model can however not be constrained as constrained sampling uses input data to the detailed model and is therefore dependent on previous unit operations.
+Based on these previous results, linear constraints $\bm{A}\bm{x} < \bm{b}$ are automatically generated by Consumet, by using the provided input file to calculate the constraint parameters $\bm{A}$ and $\bm{b}$.
+
+The structure of the \texttt{input\_file} is as follows.
+The first row is a header line which describes which columns should be used to generate constraints, and which columns correspond to which input components.
+If we e.g.\ wish to discard the 0th and 2nd columns of the file, use the 1st column as~$x_2$, and the 3rd column as~$x_0$, we can write:
+\begin{lstlisting}
+  X,2,X,0
+\end{lstlisting}
+Any non-numeric header value such as \texttt{X}, \texttt{nan}, etc.\ will discard a column from the file.
+The rest of the file simply contains the results from previous unit operations.
+For example, for a data point where the unused variables are $0.25$ and $0.75$, while $x_0 = 1$ and $x_2 = 3$, the entry would be:
+\begin{lstlisting}
+  0.25,3.0,0.75,1.0
+\end{lstlisting}
+All subsequent rows follow this format and will be used for the constrained sampling.
+Note that the input data (i.e.\ $x_0$ and $x_2$) has to be scaled so that it can be directly used by \texttt{true\_model.py}.
+
+It is worth noting that the format of this \texttt{csv}-file is basically identical to the \texttt{samples.csv} file discussed in \cref{sec:basic}.
+Thus, one can easily use the output file \texttt{samples.csv} from one surrogate model construction to constrain the sampling domain when constructing surrogate models for later unit operations.
+The only deviation between the formats is that \texttt{samples.csv} does not contain the header line discussed above, which thus has to be added manually.
+
+
+
+\section{Parameters}\label{sec:param}
+Below, we list all the available options you can set in \texttt{config.ini} and briefly discuss their uses.
+\begin{labeling}{xxxxxxxxxxxxxxx}
+	\item[model\_class]
+		What kind of model to construct.
+		Currently, the choices available are \texttt{taylor} (Taylor series), \texttt{fourier} (Fourier series), \texttt{legendre} (Legendre polynomials), and \texttt{chebyshev} (Chebyshev polynomials).
+		New model classes can easily be added to the end of \texttt{surrogate.py} if necessary.
+		If $\texttt{output\_dim} > 1$, it is also possible to specify different model classes for each output by setting this option to a list.
+		For instance, one may define \texttt{model\_class = [taylor, taylor, fourier]} for \texttt{output\_dim = 3}.
+	\item[model\_order]
+		Number of basis functions to use.
+		If e.g. \texttt{model\_class = taylor} and \texttt{model\_order = 2},
+		we would in 2D get the basis set $\{1, x_0, x_0^2, x_1, x_1^2, x_0x_1\}$.
+		If $\texttt{output\_dim} > 1$, it is also possible to specify different model orders for each output by specifying a list; for instance, \texttt{model\_order = [4,2,3]}.
+	\item[input\_dim]
+		Number of input dimensions.
+		If we are trying to construct a surrogate model for a process $\bm{z} = f(\bm{x})$, this is the number of components~$\bm{x}$ has.
+	\item[input\_lb]
+		Lower bound for each component in $\bm{x}$ above. This should be a list.
+	\item[input\_ub]
+		Upper bound for each component in $\bm{x}$ above. This should be a list.
+	\item[input\_file]
+		Optional \texttt{csv}-file used to calculate inequality constraints $\bm{A}\bm{x} \leq \bm{b}$.
+		This can increase accuracy and decrease computation time cf.\ only specifying box constraints (i.e.\ upper and lower bounds for the components of~$\bm{x}$).
+		See \cref{sec:constraint} for more information about the use of this parameter.
+	\item[output\_dim]
+		Number of output dimensions.
+		If we are trying to construct a surrogate model for a process $\bm{z} = f(\bm{x})$, this is the number of components~$\bm{z}$ has.
+	\item[batch\_file]
+		If available, one can load previously sampled data from a file, in which case this option can be set to its filename.
+		This should be a \texttt{csv}-file, where first column is the sample index, the next columns are the components of the input variable~$\bm{x}$, and the final columns are the components of the output variable~$\bm{z} = f(\bm{x})$.
+		Note that the file \texttt{samples.csv} generated by the program can be used as a \texttt{batch\_file} for future simulations.
+	\item[batch\_doe]
+		If no batch file is available, or the number of samples is too low for regression, a design-of-experiment method is used to procure the initial samples.
+		This option selects what method to use: \texttt{LHS} (Latin Hypercube Sampling), \texttt{Sobol} (Sobol Sequence), \texttt{MonteCarlo}, or \texttt{RegularGrid}.
+	\item[batch\_num]
+		Number of batch samples to select via design of experiment.
+		If this number is too low compared to the number of regression parameters in the chosen surrogate model, it is automatically increased to the minimum.
+		The default value is 0, i.e.\ the minimum number deemed necessary.
+	\item[batch\_corn]
+		Whether batch sampling should include input-domain corner points when using a design of experiment. This avoids extrapolation but comes at the cost of $2^{\texttt{input\_dim}}$ additional points.
+		By default, this is set to 0~(off).
+	\item[adapt\_num]
+		Maximal number of adaptive sampling iterations before giving up on obtaining the requested precision.
+		If this is zero, adaptive sampling is disabled, and only batch sampling is performed.
+		The default value is~$5$.
+	\item[adapt\_tol]
+		Error tolerance of the adaptive sampling routine.
+		The default value is~$10^{-3}$, i.e.\ the maximum error on the input domain should be below~0.1\%.
+	\item[adapt\_type]
+		Adaptive sampling algorithm to use. 
+		The default and recommended option is \texttt{seq} (sequential), but \texttt{sim} (simultaneous) is also available.
+		Note that these algorithms only produce different results for $\texttt{output\_dim} > 1$.
+	\item[adapt\_pen]
+		Anti-clustering penalty used when performing adaptive sampling.
+		This option sets the magnitude of the penalty.
+	\item[adapt\_rad]
+		Anti-clustering penalty used when performing adaptive sampling.
+		This option sets the radius of the penalty region.
+	\item[nomad\_exe]
+		Executable used by \texttt{nomad}.
+		Most users won't need to change this.
+	\item[nomad\_num]
+		Internal iteration limit used by \texttt{nomad}.
+	\item[nomad\_tol]
+		Internal tolerance used by \texttt{nomad}.
+	\item[regpen\_crit]
+		Information criterion used to select regression penalty.
+		The options are \texttt{aic} (Akaike), \texttt{bic} (Bayesian), \texttt{hqic} (Hannan--Quinn), and the versions \texttt{aicc}, \texttt{bicc}, \texttt{hqicc} with low-sample corrections.
+		The default is \texttt{aicc}.
+	\item[regpen\_lim]
+		Limit on how small a regression parameter can become before it is eliminated from the model.
+		If e.g. \texttt{regpen\_lim = 1e-4}, then terms in the regression that affect the output~$\bm{z}$ by less than $10^{-4}$ compared to the dominant term in the model are automatically dropped from the model.
+	\item[regpen\_num]
+		Number of logarithmically spaced regression penalties to test.
+	\item[regpen\_lb]
+		Lower bound for the regression penalty.
+		This is typically a few orders of magnitude lower than the expected variations in the output variables~$\bm{z}$.
+	\item[regpen\_ub]
+		Upper bound for the regression penalty.
+		This is typically a few orders of magnitude higher than the expected variations in the output variables~$\bm{z}$.
+\end{labeling}
+
+\begin{thebibliography}{10}
+\bibitem{TechPaper}
+	J.~Straus, B.R.~Knudsen, J.A.~Ouassou, R.~Anantharaman.
+	Surrogate model generation for hydrogen production from natural gas.
+	\emph{Under preparation} (2019).
+\end{thebibliography}
+\end{document}
