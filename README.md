@@ -5,8 +5,9 @@ black box, via penalized regression methods and adaptive sampling.
 It uses the same sampling algorithm as the proprietary black-box
 modeling tool [Alamo](http://archimedes.cheme.cmu.edu/?q=alamo),
 i.e. error-maximization sampling with derivative-free optimization.
-However, in constrast to e.g. Alamo, **Consumet is completely free**:
-you may use it for any purpose without having to purchase a license.
+However, in constrast to e.g. Alamo, **Consumet and all of its
+dependencies are completely free**. In other words, you can use
+it for any purpose without having to purchase any license.
 
 Please see the [user manual](doc/manual.pdf) for more information;
 this includes a reference to a scientific paper that contains more
