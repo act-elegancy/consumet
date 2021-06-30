@@ -1,5 +1,5 @@
-Consumet: *con*structor of *su*rrogates and *met*amodels
-========================================================
+# Consumet: *con*structor of *su*rrogates and *met*amodels
+
 This is a tool for creating surrogate models from a user-provided
 black box, via penalized regression methods and adaptive sampling.
 It uses the same sampling algorithm as the proprietary black-box
@@ -9,9 +9,9 @@ However, in constrast to e.g. Alamo, **Consumet and all of its
 dependencies are completely free**. In other words, you can use
 it for any purpose without having to purchase any license.
 
-Please see the [user manual](doc/manual.pdf) for more information;
-this includes a reference to a scientific paper that contains more
-details about the algorithms behind our software implementation.
+Please see the [user manual](doc/manual.pdf) for information about
+how to use Consumet. For details about the technical implementation,
+see [this research paper](https://dx.doi.org/10.1002/aic.17357).
 
 The surrogate modeling tool is available as free and open-source
 software under the [MIT license](LICENSE.md). This is a permissive
