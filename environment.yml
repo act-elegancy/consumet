@@ -4,9 +4,8 @@ channels:
   - conda-forge
 dependencies:
   - python=3.7
-  - ipopt
+  - ipopt=3.11
   - scipy
   - numpy
   - pydoe
   - pyomo
-  - pyomo.extras
